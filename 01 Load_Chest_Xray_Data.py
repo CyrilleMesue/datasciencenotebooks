@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[3]:
+# Author : Cyrille Mesue NJUME
+# Version 01-07-2021
 
 
 def load_Xray_train_data(splittype):
