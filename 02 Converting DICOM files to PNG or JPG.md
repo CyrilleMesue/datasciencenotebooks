@@ -1,4 +1,3 @@
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googlecolab/colabtools/blob/master/notebooks/colab-github-demo.ipynb)
 # Packages to be insalled
 ```python
 # pip install pydicom
@@ -20,7 +19,12 @@ from pathlib import Path
 ```
 
 ```python
-def Dicom_to_Image(Path):
+def Dicom_to_Image(input):
+    """
+    input: full dicom image path
+    output: single channel image array with pixel values between 0 and 255
+    """
+    
     dcm_Img = pydicom.read_file(Path)
 
     rows = dcm_Img.get(0x00280010).value     #Get number of rows from tag (0028, 0010)
@@ -64,21 +68,27 @@ def Dicom_to_Image(Path):
                 New_Img[i][j] = 0
             else:
                New_Img[i][j] = int(((Rescale_Pix_Val - Window_Min) / (Window_Max - Window_Min)) * 255)     #Normalize the intensities
+    output = New_Img
+    return output
 
-  
-    return New_Img 
 
-def dcm_to_png(filepath):
+def dcm_to_png(filepath, outdir):
+    """
+        filepath: full dicom image path
+        outdir: directory name where you want your image to be saved
+    """
   image = Dicom_to_Image(filepath)
   dcm_filename = filepath.parts[-1]
-  png_filename = dcm_filename.replace('.dcm','.png')
-  cv2.imwrite(outdir + png_filename, image)
-
-outdir = '/content/drive/MyDrive/BrainCT/TRAINING/ISKEMI/png/'
-if not os.path.exists(outdir):
+  png_filename = dcm_filename.replace('.dcm','.png') # replace '.png' with '.jpg' to save image in jpeg format
+  cv2.imwrite(outdir + png_filename, image) # image saved in outdir with png_filename in PNG format
+  
+  
+outdir = '/Output Directory/' # Set directory where all png images will be saved
+if not os.path.exists(outdir): # Loop to convert many images from dicom to PNG or JPEG
   os.mkdir(outdir)
-ischemic_dicom_images = Path("/content/drive/MyDrive/BrainCT/TRAINING/ISKEMI/DICOM/")
-for imagepath in tqdm(ischemic_dicom_img_paths):
-  dcm_to_png(imagepath)
+  
+dicom_img_paths = Path("/Input Directory/")  # Directory full of many dicom images to be converted
+for imagepath in tqdm(dicom_img_paths):
+  dcm_to_png(imagepath, outdir)
 ```
 
