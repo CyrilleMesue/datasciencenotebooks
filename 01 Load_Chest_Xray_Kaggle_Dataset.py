@@ -1,5 +1,5 @@
 # Author : Cyrille Mesue NJUME
-# Version 01-07-2021
+# Version 02-07-2021
 resize_shape = (224,224)
 
 def load_Xray_train_data(splittype, resize_shape):
