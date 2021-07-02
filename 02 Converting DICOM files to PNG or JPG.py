@@ -2,14 +2,12 @@ Author: Cyrille Mesue NJUME
 Version: 02.07.2021
 
 ### Packages to be insalled
-```python
 # pip install pydicom
 # pip install pylibjpeg pylibjpeg-libjpeg pydicom
 # pip install --upgrade numpy
-```
-### Import Packages
 
-```python
+
+### Import Packages
 import numpy as np
 import pydicom
 import pylibjpeg
@@ -21,7 +19,7 @@ from dask.diagnostics import ProgressBar
 from pathlib import Path
 ```
 ### Code  
-```python
+
 def Dicom_to_Image(input):
     """
     input: full dicom image path
