@@ -1,3 +1,6 @@
+Author: Cyrille Mesue NJUME
+Version: 02.07.2021
+
 # Packages to be insalled
 ```python
 # pip install pydicom
@@ -69,6 +72,7 @@ def Dicom_to_Image(input):
             else:
                New_Img[i][j] = int(((Rescale_Pix_Val - Window_Min) / (Window_Max - Window_Min)) * 255)     #Normalize the intensities
     output = New_Img
+    
     return output
 
 
