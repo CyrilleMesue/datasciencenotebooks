@@ -1,4 +1,4 @@
-#Author: Cyrille Mesue NJUME     
+#Author: Cyrille NJUME     
 #Version: 02.07.2021
 
 ### Packages to be insalled
