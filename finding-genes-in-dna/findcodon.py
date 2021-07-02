@@ -1,1 +1,0 @@
-def findcondon(dna,codon):
