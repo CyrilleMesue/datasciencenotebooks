@@ -4,7 +4,7 @@
 # pip install pylibjpeg pylibjpeg-libjpeg pydicom
 # pip install --upgrade numpy
 ```
-# Import Statements
+# Import Packages
 
 ```python
 import numpy as np
@@ -22,13 +22,13 @@ from pathlib import Path
 def Dicom_to_Image(Path):
     dcm_Img = pydicom.read_file(Path)
 
-    rows = dcm_Img.get(0x00280010).value #Get number of rows from tag (0028, 0010)
-    cols = dcm_Img.get(0x00280011).value #Get number of cols from tag (0028, 0011)
+    rows = dcm_Img.get(0x00280010).value     #Get number of rows from tag (0028, 0010)
+    cols = dcm_Img.get(0x00280011).value     #Get number of cols from tag (0028, 0011)
 
-    #Instance_Number = int(dcm_Img.get(0x00200013).value) #Get actual slice instance number from tag (0020, 0013)
+    #Instance_Number = int(dcm_Img.get(0x00200013).value)      #Get actual slice instance number from tag (0020, 0013)
 
-    #Window_Center = dcm_Img.get(0x00281050).value #Get window center from tag (0028, 1050)
-    #Window_Width = dcm_Img.get(0x00281051).value #Get window width from tag (0028, 1051)
+    #Window_Center = dcm_Img.get(0x00281050).value    #Get window center from tag (0028, 1050)
+    #Window_Width = dcm_Img.get(0x00281051).value     #Get window width from tag (0028, 1051)
     Window_Center = np.array(dcm_Img.WindowCenter)
     Window_Width = np.array(dcm_Img.WindowWidth)
     
@@ -57,29 +57,21 @@ def Dicom_to_Image(Path):
             Pix_Val = Pixels[i][j]
             Rescale_Pix_Val = Pix_Val * Rescale_Slope + Rescale_Intercept
 
-            if (Rescale_Pix_Val > Window_Max): #if intensity is greater than max window
+            if (Rescale_Pix_Val > Window_Max):       #if intensity is greater than max window
                 New_Img[i][j] = 255
-            elif (Rescale_Pix_Val < Window_Min): #if intensity is less than min window
+            elif (Rescale_Pix_Val < Window_Min):     #if intensity is less than min window
                 New_Img[i][j] = 0
             else:
-               New_Img[i][j] = int(((Rescale_Pix_Val - Window_Min) / (Window_Max - Window_Min)) * 255) #Normalize the intensities
+               New_Img[i][j] = int(((Rescale_Pix_Val - Window_Min) / (Window_Max - Window_Min)) * 255)     #Normalize the intensities
 
-    
-
-    return New_Img #, Instance_Number
-
-```
-
-```python 
+  
+    return New_Img 
 
 def dcm_to_png(filepath):
   image = Dicom_to_Image(filepath)
   dcm_filename = filepath.parts[-1]
   png_filename = dcm_filename.replace('.dcm','.png')
   cv2.imwrite(outdir + png_filename, image)
-```
-
-```python
 
 outdir = '/content/drive/MyDrive/BrainCT/TRAINING/ISKEMI/png/'
 if not os.path.exists(outdir):
