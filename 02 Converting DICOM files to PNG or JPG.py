@@ -1,5 +1,5 @@
-Author: Cyrille Mesue NJUME     
-Version: 02.07.2021
+#Author: Cyrille Mesue NJUME     
+#Version: 02.07.2021
 
 ### Packages to be insalled
 # pip install pydicom
