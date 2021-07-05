@@ -1,9 +1,17 @@
+# Author: Cyrille NJUME
+# Version 05.07.2021
+
 def findStartCodon(dna, start_location):
-    dna = dna.upper()
-    startCodon = "ATG"
+    """
+    dna: a string of ATGC characters representing the nucleotides of a DNA molecule
+    start_location: index on the dna string where the start codon search should begin
+    startIndex: output of the function. Also the index of the found start codon. If no start codon is found, startIndex is given a None value
+    """
+    dna = dna.upper()       # ensuring that all letters of the dna string are uppercase.
+    startCodon = "ATG"      # "ATG" is the start codon for every gene in mammals
     dna_length = len(dna)
     startIndex = None
-    for i in range(start_location,dna_length-3):
+    for i in range(start_location,dna_length-3): #  slicing through the dna string to see if any substring matches with the start codon
         if dna[i:i+3] == startCodon:
             startIndex = i
             break
@@ -11,6 +19,8 @@ def findStartCodon(dna, start_location):
   
   
   def findStopCodon(dna, startIndex,stopCodon):
+        """
+        """
     dna = dna.upper()
     dna_length = len(dna)
     stopIndex = None
