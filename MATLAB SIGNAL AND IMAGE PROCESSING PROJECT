@@ -23,57 +23,131 @@ msk=[]; msk_dil=[]; msk_dil_erd=[]; centroid=[]; component_size=[];
 
 %%%%% 1. Localize the centroid of each coin
 % Otsu threshold
-[mask,threshold] = OtsuThreshold(im);
-msk = mask;
+msk = OtsuThreshold(im);
 figure; imagesc(msk); colormap(gray); title('Otsu'); axis equal;
 
-% Dilate 
-msk_dil = imdilate(msk,ones(7,7));
-
+% Dilate 9x9
+msk_dil = imdilate(msk,ones(9,9));
 figure; imagesc(msk_dil); colormap(gray); title('Dilated'); axis equal;
 
-% Erode 
-msk_dil_erd = imerode(msk_dil,ones(17,17));
-
+% Erode 23x23
+msk_dil_erd = imerode(msk_dil,ones(23,23));
 figure; imagesc(msk_dil_erd); colormap(gray); title('Eroded'); axis equal;
 
+
 % Connected components to get centroids of coins:
-
-region = regionprops('table', msk_dil_erd, 'Centroid', 'Area');
-centroid = region.Centroid;
-centroid = round(centroid);
-component_size = region.Area;
-centroid
-component_size
-
-
-%%%%%%%%%%%%%%%%%%%% Helper Functions %%%%%%%%%%%%%%%%%%%%%
-function [mask,thrsh] = OtsuThreshold(img)
-    % Define the Otsu threshold 'thrsh' using the histogram of img
-    hist = imhist(img);
-    thrsh =  otsuthresh(hist)*255;
-    % Apply the threshold to 'img' to make 'msk'
-    mask = img >  thrsh;
+cc = bwconncomp(msk_dil_erd);
+props_struct = regionprops(cc);
+centroid = zeros(length(props_struct),2);
+component_size = zeros(length(props_struct),1);
+for i=1:length(props_struct)
+    centroid(i,:) = round(props_struct(i).Centroid);
+    component_size(i) = props_struct(i).Area;
 end
 
 
+%%%%% 2. Measure features for each coin using a bank of matching filters
+% make matching filters to create features
+% Define diameters to use for filters
+dimediameter = 31;
+quarterdiameter = 51;
+nickeldiameter = 41;
+
+% Initialize assessed variable D
+D=[]; nickelfilter = []; dimefilter = []; quarterfilter = [];
+
+% Use the MakeCircleMatchingFilter function to create matching filters for dimes, nickels, and quarters
+% (This is in a separate Matlab grader problem. Save your work, 
+%       complete the corresponding grader problem and embed the solution 
+%       in the helper function list below.)
+nickelfilter = MakeCircleMatchingFilter(nickeldiameter,filtsize);
+dimefilter = MakeCircleMatchingFilter(dimediameter,filtsize);
+quarterfilter = MakeCircleMatchingFilter(quarterdiameter,filtsize);
+
+figure;
+subplot(1,3,1); imagesc(dimefilter); colormap(gray); title('dime filter'); axis tight equal;
+subplot(1,3,2); imagesc(nickelfilter); colormap(gray); title('nickel filter'); axis tight equal;
+subplot(1,3,3); imagesc(quarterfilter); colormap(gray); title('quarter filter'); axis tight equal;
+
+% Evaluate each of the 3 matching filters on each coin to serve as 3 feature measurements 
+D = zeros(length(centroid),3);
+for i=1:length(centroid)
+    D(i,1) = corr(dimefilter(:),reshape(msk_dil_erd(centroid(i,2)-filtsizeh:...
+        centroid(i,2)+filtsizeh,centroid(i,1)-filtsizeh:centroid(i,1)+filtsizeh),[filtsize*filtsize,1]));
+    D(i,2) = corr(nickelfilter(:),reshape(msk_dil_erd(centroid(i,2)-filtsizeh:...
+        centroid(i,2)+filtsizeh,centroid(i,1)-filtsizeh:centroid(i,1)+filtsizeh),[filtsize*filtsize,1]));
+    D(i,3) = corr(quarterfilter(:),reshape(msk_dil_erd(centroid(i,2)-filtsizeh:...
+        centroid(i,2)+filtsizeh,centroid(i,1)-filtsizeh:centroid(i,1)+filtsizeh),[filtsize*filtsize,1]));    
+end
+
+figure;
+subplot(1,3,1); imagesc(dimefilter); colormap(gray); title('dime filter'); axis tight equal;
+subplot(1,3,2); imagesc(nickelfilter); colormap(gray); title('nickel filter'); axis tight equal;
+subplot(1,3,3); imagesc(quarterfilter); colormap(gray); title('quarter filter'); axis tight equal;
+
+%%%%% 3. Perform k-means clustering of features for unsupervised learning classifier
+rng(0);
+cls_init=[]; cls=[]; totcount=[];
+totcount = 0;
+cls_init  = kmeans(D,3);
+
+cls_init
+% relabel centroid classes based on average size of the objects in each class. smallest will be dime, next nickel, and largest quarter
+class_ave_object_size = [];
+for i = 1:3
+    class_ave_object_size(i) = mean(component_size(cls_init == i));
+end
+
+[~,classmap] = sort(class_ave_object_size);
+
+for i = 1:length(cls_init)
+    if cls_init(i) == classmap(1)
+        cls(i,1) = 1;
+    elseif cls_init(i) == classmap(2)
+        cls(i,1) = 2;
+    else
+        cls(i,1) = 3;
+    end
+end
+
+cls
+% Visualize the result
+figure; imagesc(im);colormap(gray);title('test image');hold on;axis equal;
+
+% plot circles around each coin with different color/diameter unique to each type and count the change
+
+for ii = 1: length(centroid)
+    cen = centroid(ii,:);
+    x = cen(1);
+    y = cen(2);
+    curr_cls = cls(ii);
+    coinvalue = AddCoinToPlotAndCount(x,y,curr_cls)
+    totcount = coinvalue + totcount;
+end
+title([num2str(totcount),' cents'])
 
 
-function [filter,xc,yc] = MakeCircleMatchingFilter(diameter,W)
-    % initialize filter
-    filter = zeros(W);
-    % define coordinates for the center of the WxW filter
-    xc = (W + 1)/2;
-    yc = (W + 1)/2;
-    % Use double-for loops to check if each pixel lies in the foreground of the circle
-    for i = 1:W
-        for j = 1:W
-            if ((i - xc)^2 + (j - yc)^2) <= ((diameter)/2)^2
-                filter(i,j) = 1;
-            end
+%%%%%%%%%%%%%%%%%%%% Helper Functions %%%%%%%%%%%%%%%%%%%%%
+
+
+function filter = MakeCircleMatchingFilter(diameter,filtsize)
+filter = zeros(filtsize,filtsize);
+radius = diameter/2;
+c = (filtsize+1)/2;
+for i=1:filtsize
+    for j=1:filtsize
+        if (i-c)*(i-c) + (j-c)*(j-c) <= radius*radius
+            filter(i,j) = 1;
         end
     end
+end
+end
 
+function [msk,thrsh] = OtsuThreshold(im)
+hst = imhist(im);
+res = otsuthresh(hst);
+thrsh = res*255;
+msk = im>thrsh;
 end
 
 
